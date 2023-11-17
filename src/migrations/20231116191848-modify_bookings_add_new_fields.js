@@ -37,9 +37,7 @@ module.exports = {
      * Example:
      * await queryInterface.dropTable('users');
      */
-    await queryInterface.removeColumn(
-      'noOfseats',
-      'totalCost'
-    );
+    await queryInterface.removeColumn('bookings','noOfseats');
+    await queryInterface.removeColumn('bookings','totalCost');
   }
 };
