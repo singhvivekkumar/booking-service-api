@@ -7,6 +7,9 @@ class ServiceError extends Error {
 		explanation = "Error took place in service layer",
 		statusCode = StatusCodes.INTERNAL_SERVER_ERROR
 	) {
+		console.log("ram");
+		super();
+		console.log("eam");
 		this.name = "ServiceError";
 		this.message = message;
 		this.explanation = explanation;
