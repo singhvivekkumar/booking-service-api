@@ -1,10 +1,10 @@
-const ampqlib = require('amqplib');
+const amqplib = require('amqplib');
 
 const { MESSAGE_BROKER_URL, EXCHANGE_NAME } = require('../config/serverConfig');
 
 const createChannel = async () => {
 	try {
-		const connection = await ampqlib.connect(MESSAGE_BROKER_URL);
+		const connection = await amqplib.connect(MESSAGE_BROKER_URL);
 		const channel = await connection.createChannel();
 		await channel.assertExchange(EXCHANGE_NAME, 'direct', false);
 		return channel;
@@ -16,12 +16,14 @@ const createChannel = async () => {
 
 const subscribeMessage = async (channel, service, binding_key) => {
 	try {
-		const applicationQueue = await channel.assertQueue('QUEUE_NAME');
+		// which queue do you want to subscribe assert that queue
+		const applicationQueue = await channel.assertQueue('AIRLINE_QUEUE');
 		channel.bindQueue(applicationQueue.queue, EXCHANGE_NAME, binding_key);
 
 		channel.consume(applicationQueue.queue, (msg) => {
 			console.log('recevied data');
 			console.log(msg.content.toString());
+			console.log(msg);
 			channel.ack(msg);
 		})
 	} catch(error) {
@@ -32,8 +34,11 @@ const subscribeMessage = async (channel, service, binding_key) => {
 
 const publishMessage = async (channel, binding_key, message) => {
 	try {
+		// insert new queue or tell channel to bind with this queue
 		await channel.assertQueue('AIRLINE_QUEUE')
+		// channel publish data through exchange distributor and which queue by binding_key.
 		const published = await channel.publish(EXCHANGE_NAME, binding_key, Buffer.from(message));
+		// if published it will return true
 		return published;
 	} catch(error) {
 		console.log("error in publishing message queue")
