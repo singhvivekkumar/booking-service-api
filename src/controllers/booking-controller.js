@@ -11,12 +11,12 @@ class BookingController {
 	}
 	async create(req, res) {
 		try {
-		const response = await bookingService.createBooking(req.body);
-		return res.status(StatusCodes.OK).json({
-			data: response,
-			success: true,
-			message: "successful request ",
-			err: {}
+			const response = await bookingService.createBooking(req.body);
+			return res.status(StatusCodes.OK).json({
+				data: response,
+				success: true,
+				message: "successful request ",
+				err: {}
 		})
 		} catch (error) {
 			return res.status(error.statusCode).json({
