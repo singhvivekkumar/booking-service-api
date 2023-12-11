@@ -1,30 +1,49 @@
-const { StatusCodes } = require('http-status-codes');
-const { BookingService } = require('../services/index');
-const { createChannel, publishMessage } = require('../utils/messageQueue');
-const { BINDING_KEY } = require('../config/serverConfig');
+const { StatusCodes } = require("http-status-codes");
+const { BookingService } = require("../services/index");
+const { createChannel, publishMessage } = require("../utils/messageQueue");
+const { BINDING_KEY } = require("../config/serverConfig");
 
 const bookingService = new BookingService();
 
 class BookingController {
 
-	constructor() {
-	}
+	constructor() {}
+
 	async create(req, res) {
 		try {
 			const response = await bookingService.createBooking(req.body);
 			return res.status(StatusCodes.OK).json({
 				data: response,
 				success: true,
-				message: "successful request ",
-				err: {}
-		})
+				message: "successful request submitted",
+				err: {},
+			});
 		} catch (error) {
 			return res.status(error.statusCode).json({
 				data: {},
 				success: false,
 				message: error.message,
-				err: error
-			})
+				err: error,
+			});
+		}
+	}
+
+	async get(req, res) {
+		try {
+			const response = await bookingService.getBooking(req.body);
+			return res.status(StatusCodes.OK).json({
+				data: response,
+				success: true,
+				message: "successful fetch booking details",
+				err: {},
+			});
+		} catch (error) {
+			return res.status(error.statusCode).json({
+				data: {},
+				success: false,
+				message: error.message,
+				err: error,
+			});
 		}
 	}
 
@@ -33,21 +52,25 @@ class BookingController {
 			const channel = await createChannel();
 			console.log(channel);
 			const data = { message: "SUCCESS" };
-			const response = await publishMessage(channel, BINDING_KEY, JSON.stringify(data));
-			console.log(response)
+			const response = await publishMessage(
+				channel,
+				BINDING_KEY,
+				JSON.stringify(data)
+			);
+			console.log(response);
 			return res.status(StatusCodes.OK).json({
 				data: response,
 				success: true,
 				message: "successful published the event",
-				err: {}
-			})
+				err: {},
+			});
 		} catch (error) {
 			return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
 				data: {},
 				success: false,
 				message: "not able to publish an event",
-				err: error
-			})
+				err: error,
+			});
 		}
 	}
 }
