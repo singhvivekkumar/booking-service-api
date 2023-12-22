@@ -1,8 +1,10 @@
 const { default: axios } = require("axios");
 
 const { BookingRepository } = require("../repository/index");
-const { FLIGHT_SERVICE_PATH } = require("../config/serverConfig");
+const { FLIGHT_URL, USER_URL, BINDING_KEY } = require("../config/serverConfig");
 const { ServiceError } = require("../utils/errors");
+const reminderService = require("../utils/reminderService");
+const { createChannel, publishMessage } = require("../utils/messageQueue");
 
 class BookingService {
 	constructor() {
@@ -13,11 +15,12 @@ class BookingService {
 		try {
 			const flightId = data.flightId;
 			console.log(data);
-			//template string of flights url
-			const getFlightRequestURL = `${FLIGHT_SERVICE_PATH}/api/v1/flights/${flightId}`;
+			// string template of flights url
+			const getFlightRequestURL = `${FLIGHT_URL}/api/v1/flights/${flightId}`;
 			const response = await axios.get(getFlightRequestURL);
 			const flightData = response.data.data;
 
+			// check available seat
 			if (data.noOfSeats > flightData.totalSeats) {
 				console.log(flightData.totalSeats);
 				throw new ServiceError(
@@ -31,18 +34,35 @@ class BookingService {
 			const booking = await this.bookingRepository.create(bookingPayload);
 
 			//update flights remaining number of seats
-			const updateFlightRequestURL = `${FLIGHT_SERVICE_PATH}/api/v1/flights/${booking.flightId}`;
+			const updateFlightRequestURL = `${FLIGHT_URL}/api/v1/flights/${booking.flightId}`;
 			// console.log(updateFlightRequestURL,flightData.totalSeats-booking.noOfSeats);
 			await axios.patch(updateFlightRequestURL, {
 				totalSeats: flightData.totalSeats - booking.noOfSeats,
 			});
 
+			// change status to confirm
 			const finalBooking = await this.bookingRepository.update(
 				booking.id,
-				{
-					status: "Booked",
-				}
+				{ status: "Booked" }
 			);
+
+			// get user email
+			const user = await axios.get(`${USER_URL}/api/v1/details`, { params: {id: booking.userId}});
+			console.log(user.data.data.email);
+			const email = user.data.data.email;
+
+			// call reminder service
+			const reminderPayload = {
+				recepientEmail: email,
+				subject: `Booking confirm`,
+				content: `Dear user your flight from ${flightData.departureAirport} to ${flightData.arrivalAirport} is ready to fly`,
+				notificationTime: `${flightData.departureTime}`,
+			};
+			// normal http call
+			// await reminderService(reminderPayload);
+			// message queue by the help of rabbitmq with ampqlib(nodejs client)
+			const channel = await createChannel();
+			publishMessage(channel, BINDING_KEY, JSON.stringify(reminderPayload));
 
 			return finalBooking;
 		} catch (error) {

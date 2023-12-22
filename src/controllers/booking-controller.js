@@ -34,7 +34,7 @@ class BookingController {
 			return res.status(StatusCodes.OK).json({
 				data: response,
 				success: true,
-				message: "successful fetch booking details",
+				message: "successful fetch booking details of user",
 				err: {},
 			});
 		} catch (error) {
@@ -52,11 +52,7 @@ class BookingController {
 			const channel = await createChannel();
 			console.log(channel);
 			const data = { message: "SUCCESS" };
-			const response = await publishMessage(
-				channel,
-				BINDING_KEY,
-				JSON.stringify(data)
-			);
+			const response = await publishMessage(channel,BINDING_KEY,JSON.stringify(data));
 			console.log(response);
 			return res.status(StatusCodes.OK).json({
 				data: response,

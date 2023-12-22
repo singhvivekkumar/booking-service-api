@@ -23,7 +23,7 @@ class BookingRepository {
 
 	async getById(bookingId) {
 		try {
-			const booking = await BookingfindByPk(bookingId)
+			const booking = await Booking.findByPk(bookingId)
 			return booking;
 		} catch (error) {
 			if (error.name == "SequelizeValidateError") {
