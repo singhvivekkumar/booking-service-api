@@ -50,7 +50,7 @@ class BookingController {
 	async sendMessageQueue(req, res) {
 		try {
 			const channel = await createChannel();
-			console.log(channel);
+			// console.log(channel);
 			const data = { message: "SUCCESS" };
 			const response = await publishMessage(channel,BINDING_KEY,JSON.stringify(data));
 			console.log(response);
